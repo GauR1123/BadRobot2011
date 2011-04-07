@@ -70,9 +70,7 @@ public class RobotTemplate extends IterativeRobot
 
     DigitalInput upperLimitS, lowerLimitS, upperLimitE, lowerLimitE;
 
-
-    Encoder upperArmEncoder;
-    Encoder lowerArmEncoder;
+    Encoder lowerArmEncoder = new Encoder(4,5);
 
     int autoState;
 
@@ -661,7 +659,7 @@ lcd.updateLCD();
 
     public void setArmHeight(int height)
     {
-         boolean upperArmRaised = false;
+         boolean upperArmRaised = false; // meaning shoulder
          boolean droppingArm = false;
                 //upperLimitS = new DigitalInput(10);
                 //lowerLimitS = new DigitalInput(11);
@@ -671,8 +669,8 @@ lcd.updateLCD();
                 default:
                         break;
                 case 5:
-                    if (ShoulderencoderValue < ShoulderteleopValue) Sholder.set(0.2); // raise lower arm to set point
-                    else if (ShoulderencoderValue > ShoulderteleopValue)
+                    while (lowerArmEncoder.get() < ShoulderteleopValue) Sholder.set(0.2); // raise lower arm to set point
+                    if (lowerArmEncoder.get() > ShoulderteleopValue)
                     {
                         Sholder.set(0);
                     }
@@ -680,9 +678,9 @@ lcd.updateLCD();
                     //THERE NEEDS TO BE A LOOP HERE!!!
                     break;
                 case 9:
-                    if (!upperLimitS.get()) {Sholder.set(0.3); upperArmRaised = true;}
-                    if (!upperLimitE.get() && upperArmRaised && !droppingArm) Elbow.set(0.3);
-                    if (upperLimitE.get())
+                    while (!upperLimitS.get()) {Sholder.set(0.3); upperArmRaised = true;}
+                    while (!upperLimitE.get() && upperArmRaised && !droppingArm) Elbow.set(0.3);
+                    while (upperLimitE.get())
                     {
                         droppingArm = true;
                         Elbow.set(-0.2);
@@ -694,8 +692,8 @@ lcd.updateLCD();
                      //THERE NEEDS TO BE A LOOP HERE!!!
                     break;
                 case 2:
-                    if (ShoulderencoderValue < ShoulderteleopValue) Sholder.set(0.2); // raise lower arm to set point
-                    else if (ShoulderencoderValue > ShoulderteleopValue)
+                    while (lowerArmEncoder.get() < ShoulderteleopValue) Sholder.set(0.2); // raise lower arm to set point
+                    if (lowerArmEncoder.get() > ShoulderteleopValue)
                     {
                         Sholder.set(0);
                     }
@@ -703,8 +701,8 @@ lcd.updateLCD();
                      //THERE NEEDS TO BE A LOOP HERE!!!
                     break;
                 case 4:
-                    if (ShoulderencoderValue < ShoulderteleopValue) Sholder.set(0.2); // raise lower arm to set point
-                    else if (ShoulderencoderValue > ShoulderteleopValue)
+                    while (lowerArmEncoder.get() < ShoulderteleopValue) Sholder.set(0.2); // raise lower arm to set point
+                    if (lowerArmEncoder.get() > ShoulderteleopValue)
                     {
                         Sholder.set(0);
                     }
@@ -712,8 +710,8 @@ lcd.updateLCD();
                      //THERE NEEDS TO BE A LOOP HERE!!!
                     break;
                 case 8:
-                    if (!upperLimitS.get()) {Sholder.set(0.3); upperArmRaised = true;}
-                    if (!upperLimitE.get() && upperArmRaised && !droppingArm) Elbow.set(0.3);
+                    while (!upperLimitS.get()) {Sholder.set(0.3); upperArmRaised = true;}
+                    while (!upperLimitE.get() && upperArmRaised && !droppingArm) Elbow.set(0.3);
                     //high high
                      //THERE NEEDS TO BE A LOOP HERE!!!
                     break;
