@@ -54,7 +54,8 @@ public class RobotTemplate extends IterativeRobot
     Solenoid shifter;//shifts
 
 
-    Solenoid Kraken, break1, break2, minibot;
+    Solenoid Kraken;
+    DigitalOutput break1, minibot;
 
     boolean forkLeft = false;
     boolean pauseAtBegin = false; //Will the robot pause at the beginning of autonomous before moving?
@@ -110,9 +111,8 @@ public class RobotTemplate extends IterativeRobot
 
                 Kraken = new Solenoid(8,2);
                 Kraken.set(false);
-                break1 = new Solenoid(8,3);
-                break2 = new Solenoid(8,4);
-                minibot = new Solenoid(8,5);
+                break1 = new DigitalOutput(2);
+                minibot = new DigitalOutput(3);
                 minibot.set(true);
                 ds = DriverStation.getInstance();
                 hasHangedTube = false;
@@ -470,13 +470,12 @@ public class RobotTemplate extends IterativeRobot
         Sholder.set(tinyDeadzone(-controller.getY()));
     }
 
-    public void updateUpperArm()
+        public void updateUpperArm()
     {
-       if(tinyDeadzone(-controller.getRawAxis(5)) == 0)
-                break2.set(true);
-        Elbow.set(-tinyDeadzone(controller.getRawAxis(5)));
-
+        if(tinyDeadzone(-controller.getY()) == 0)
+        Sholder.set(tinyDeadzone(-controller.getY()));
     }
+
     boolean run = true;
 
     public void changeKraken()
@@ -665,6 +664,7 @@ lcd.updateLCD();
                 //lowerLimitS = new DigitalInput(11);
                 //upperLimitE = new DigitalInput(12);
                 //lowerLimitE = new DigitalInput(13);
+         int ShoulderteleopValue = 9001;
           switch(height){
                 default:
                         break;
@@ -673,6 +673,7 @@ lcd.updateLCD();
                     if (lowerArmEncoder.get() > ShoulderteleopValue)
                     {
                         Sholder.set(0);
+                        break1.set(true);
                     }
                     //low middle
                     //THERE NEEDS TO BE A LOOP HERE!!!
