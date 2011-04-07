@@ -11,17 +11,16 @@ import edu.wpi.first.wpilibj.CANJaguar;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.SimpleRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.camera.AxisCamera;
 import edu.wpi.first.wpilibj.can.CANTimeoutException;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStationLCD;
-import edu.wpi.first.wpilibj.AnalogChannel;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Victor;
+import edu.wpi.first.wpilibj.Encoder;
 /**
 * The VM is configured to automatically run this class, and to call the
 * functions corresponding to each mode, as described in the IterativeRobot
@@ -36,11 +35,11 @@ public class RobotTemplate extends IterativeRobot
 * used for any initialization code.
 */
 
-    Joystick j1 = new Joystick(1);
-    Joystick j2 = new Joystick(2);
-    Joystick controller = new Joystick(3);
+    Joystick j1 = new Joystick(2);
+    Joystick j2 = new Joystick(3);
+    Joystick controller = new Joystick(1);
     CANJaguar fLeft, fRight, bLeft, bRight; //lowerArm, upperArm; //motors
-    Victor upperArm, lowerArm;
+    Victor Elbow, Sholder;
     DigitalOutput output; // for ultrasonic
     DigitalInput input;
     Ultrasonic ultraSonic;
@@ -48,48 +47,61 @@ public class RobotTemplate extends IterativeRobot
     Timer timer = new Timer(); // timer
     DigitalInput left; // for LineTracker
     DigitalInput middle;
-    DigitalInput right;
+    DigitalInput right , left2, middle2, right2;
+    DigitalInput upper1, upper2, lower1, lower2;
     DriverStation ds;
     Compressor air;
-    Solenoid shifter;
+    Solenoid shifter;//shifts
 
-    Solenoid hand;
 
-    boolean forkLeft;
-    boolean pauseAtBegin; //Will the robot pause at the beginning of autonomous before moving?
-    boolean stopAfterHang; //Will the robot stop after it hangs a ubertube?
-    boolean turnAfterHang; //Will the robot turn as it's backing away, or go straight back? (Assuming that stopAfterHang is false)
+    Solenoid Kraken, break1, break2, minibot;
+
+    boolean forkLeft = false;
+    boolean pauseAtBegin = false; //Will the robot pause at the beginning of autonomous before moving?
+    boolean stopAfterHang = false; //Will the robot stop after it hangs a ubertube?
+    boolean turnAfterHang = false; //Will the robot turn as it's backing away, or go straight back? (Assuming that stopAfterHang is false)
     boolean hasHangedTube; // Has the robot hanged its ubertube (or at least attempted to)?
     boolean hasAlreadyPaused; //Has the robot already paused at the beginning? (Assuming that pauseAtBegin is true)
     boolean doneWithAuto; //Has the robot done what it needs to in auto mode?
-    AnalogChannel upperArmChannel; //Channel that controls the arm
-    AnalogChannel lowerArmChannel;
+    boolean usingFork; //Are we taking the forked path?
     DriverStationLCD lcd;
     boolean upperArmRaised;
     boolean lowerArmRaised;
+
+    DigitalInput upperLimitS, lowerLimitS, upperLimitE, lowerLimitE;
+
+
+    Encoder upperArmEncoder;
+    Encoder lowerArmEncoder;
+
+    int autoState;
 
     public void robotInit()
     {
             try
             {
+
+                upperLimitS = new DigitalInput(10);
+                lowerLimitS = new DigitalInput(11);
+                upperLimitE = new DigitalInput(12);
+                lowerLimitE = new DigitalInput(13);
+
                 fLeft = new CANJaguar(10); // motors for wheels with CAN ports as arguements
                 fRight = new CANJaguar(4);
                 bLeft = new CANJaguar(9);
                 bRight = new CANJaguar(7);
-                lowerArm = new Victor(2);
-                upperArm = new Victor(3);
+                Sholder = new Victor(1);
+                Elbow = new Victor(3);
 
-               // setCoast(fLeft); // set them to drive in coast mode (no sudden brakes)
-               // setCoast(fRight);
-               // setCoast(bLeft);
-               // setCoast(bRight);
+                left = new DigitalInput(8); // for LineTracker
+                middle = new DigitalInput(6);
+                right = new DigitalInput(4);
+                //left2 = new DigitalInput(9); // for LineTracker
+                //middle2 = new DigitalInput(7);
+                //right2 = new DigitalInput(5);
 
-                left = new DigitalInput(3); // for LineTracker
-                middle = new DigitalInput(2);
-                right = new DigitalInput(14);
-
-                output = new DigitalOutput(10); // ultrasonic output
-                input = new DigitalInput(8); //ultrasonic input
+                output = new DigitalOutput(2); // ultrasonic output
+                input = new DigitalInput(3); //ultrasonic input
                 ultraSonic = new Ultrasonic(output, input, Ultrasonic.Unit.kMillimeter); //initialize ultrasonic
                 ultraSonic.setEnabled(true);
                 ultraSonic.setAutomaticMode(true);
@@ -98,31 +110,19 @@ public class RobotTemplate extends IterativeRobot
                 shifter = new Solenoid(8,1);
                 shifter.set(false);
 
-                hand = new Solenoid(9,1); //Change Later!!!!!!!!!!!!!!!
-                hand.set(false);
-
+                Kraken = new Solenoid(8,2);
+                Kraken.set(false);
+                break1 = new Solenoid(8,3);
+                break2 = new Solenoid(8,4);
+                minibot = new Solenoid(8,5);
+                minibot.set(true);
                 ds = DriverStation.getInstance();
                 hasHangedTube = false;
                 hasAlreadyPaused = false;
                 doneWithAuto = false;
+                autoState = 0;
                 updateDS();
 
-                upperArmChannel = new AnalogChannel(1014);
-                upperArmChannel.initAccumulator();
-
-                lowerArmChannel = new AnalogChannel(1014);
-                lowerArmChannel.initAccumulator();
-
-                upperArmRaised = false;
-                lowerArmRaised = false;
-
-                lcd = DriverStationLCD.getInstance();
-
-                upperArmChannel = new AnalogChannel(1014);
-                upperArmChannel.initAccumulator();
-
-                lowerArmChannel = new AnalogChannel(1014);
-                lowerArmChannel.initAccumulator();
 
                 upperArmRaised = false;
                 lowerArmRaised = false;
@@ -131,7 +131,16 @@ public class RobotTemplate extends IterativeRobot
 
                 cam = AxisCamera.getInstance();
 
-            } catch (Exception e) { e.printStackTrace(); }
+                //upperArmEncoder = new Encoder(1,1); //Needs channels
+                //lowerArmEncoder = new Encoder(1,2);
+                //upperArmEncoder.reset(); //"Zero out" the encoders
+               // lowerArmEncoder.reset();
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+
         timer.delay(1);
     }
 
@@ -140,17 +149,23 @@ public class RobotTemplate extends IterativeRobot
 */
 
     boolean atFork = false; // if robot has arrived at fork
+    boolean armAtHeight = false;
     int lastSense = 0; // last LineTracker which saw line (1 for left, 2 for right)
     public void autonomousPeriodic()
     {
 
+        shifter.set(true);
+        try
+        {
+            setBreak(fLeft);
+            setBreak(fRight);
+            setBreak(bLeft);
+            setBreak(bRight);
+        }
+        catch (Exception e)
+        {
 
-        try{
-         setBreak(fLeft);
-         setBreak(fRight);
-         setBreak(bLeft);
-         setBreak(bRight);
-         }catch (Exception e) {}
+        }
          if (doneWithAuto)
          {
              return;
@@ -159,16 +174,42 @@ public class RobotTemplate extends IterativeRobot
          pauseAtBegin = ds.getDigitalIn(2);
          stopAfterHang = ds.getDigitalIn(3);
          turnAfterHang = !stopAfterHang && ds.getDigitalIn(4);//This will only be true if stopAfterHang is false
+         usingFork = ds.getDigitalIn(5);
          updateComp();
          updateDS();
          boolean leftValue = left.get();
          boolean middleValue = middle.get();
          boolean rightValue = right.get();
-        //System.out.print("Autonomous Start");
+
+         int height = (int)(ds.getDigitalIn(5)?0:1)+ // lower set of pegs
+                        (int)(ds.getDigitalIn(6)?0:2)+ // low peg
+                        (int)(ds.getDigitalIn(7)?0:4)+ // mid
+                        (int)(ds.getDigitalIn(8)?0:8); // high
         double speed = 0.3;
-        int lineState = (int)(rightValue?1:0)+
-                        (int)(middleValue?2:0)+
-                        (int)(leftValue?4:0);
+       // System.out.println(rightValue + " " + middleValue + " " + leftValue);
+        int lineState = (int)(rightValue?0:1)+
+                        (int)(middleValue?0:2)+
+                        (int)(leftValue?0:4);
+
+        if(!armAtHeight)
+        {
+            setArmHeight(height);
+            armAtHeight = true;
+        }//raises arm for autonomous
+
+        if (ds.getAnalogIn(1) > 0)
+        {
+            //dead reckoning
+            straight(speed);
+            if(closerThan(665))
+            {
+                straight(0); //Stop
+                hangTube();
+                return;
+       }
+
+
+        }
 
         if (hasHangedTube && !turnAfterHang) //If the robot has hanged the tube, and then should back straight up...
             {
@@ -212,16 +253,18 @@ public class RobotTemplate extends IterativeRobot
                 doneWithAuto = true;
                 return;
          }
+        else if (!hasHangedTube)
+        {
+             moveWhileTracking(lineState, speed, autoState);
+        }
 
-         if(closerThan(1000))
+
+        //System.out.println(ultraSonic.getRangeMM());
+
+        if(closerThan(665))
         {
             straight(0); //Stop
-
-            //Here I'm guessing we'd have the hangTube() method
-
-            hasHangedTube = true;
-            if (stopAfterHang) //If the robot is supposed to stay put after it hangs a tube
-                doneWithAuto = true;
+            hangTube();
             return;
         }
 
@@ -229,6 +272,7 @@ public class RobotTemplate extends IterativeRobot
         {
             try
             {
+                straight(0);
                 Thread.sleep(3000); //Pause for 3 seconds
             }
             catch (Exception e)
@@ -238,12 +282,15 @@ public class RobotTemplate extends IterativeRobot
 
             hasAlreadyPaused = true; //The robot has now paused
         }
-        moveWhileTracking(lineState, speed);
+
+
 
     }
-  
+    boolean KrakenIsWaiting = false;
     public void teleopPeriodic()
     {
+
+         System.out.println(ultraSonic.getRangeMM());
         try{
         setCoast(fLeft); // set them to drive in coast mode (no sudden brakes)
         setCoast(fRight);
@@ -256,11 +303,26 @@ public class RobotTemplate extends IterativeRobot
         updateGear();
         updateDS();
 
+        if(controller.getRawButton(6))
+        {
+            KrakenIsWaiting = true;
+        }
+        else if(KrakenIsWaiting)
+        {
+            changeKraken();
+            KrakenIsWaiting = false;
+        }
+        updateLowerArm();
+        updateUpperArm();
 
-        setLefts(deadzone(-j1.getY()));
-        setRights(deadzone(-j2.getY()));
-       // updateLowerArm();
-       // updateUpperArm();
+        if(j2.getRawButton(10) && controller.getRawButton(2) && controller.getRawButton(8))
+            minibot.set(false);
+
+        if(!breaking())
+        {
+         setLefts(deadzone(-j1.getY()));
+         setRights(deadzone(-j2.getY()));
+        }
     }
 
     private void setLefts(double d)
@@ -270,7 +332,7 @@ public class RobotTemplate extends IterativeRobot
         fLeft.setX(d);
         bLeft.setX(d);
 
-        } 
+        }
         catch (CANTimeoutException e)
         {
             DriverStationLCD lcd = DriverStationLCD.getInstance();
@@ -286,12 +348,10 @@ public class RobotTemplate extends IterativeRobot
         ds.setDigitalOut(3, stopAfterHang);
         ds.setDigitalOut(4, turnAfterHang);
         ds.setDigitalOut(5, shifter.get());
-        System.out.println(ds.getDigitalOut(1));
         ds.setDigitalOut(2, pauseAtBegin);
         ds.setDigitalOut(3, stopAfterHang);
         ds.setDigitalOut(4, turnAfterHang);
-        ds.setDigitalOut(5,  shifter.get());
-        System.out.println("Updated");
+        ds.setDigitalOut(5, shifter.get());
     }
 
     private void setRights(double d)
@@ -323,14 +383,7 @@ public class RobotTemplate extends IterativeRobot
     boolean switchStateShift = false;
     public void updateGear()
     {
-        /** if(j1.getTrigger() || j2.getTrigger())
-<<<<<<< HEAD
-switchStateShift = true;
-else if(switchStateShift)
-{
-shifter.set(!shifter.get());
-switchStateShift = false;
-}**/
+
         if(j1.getTrigger())
         {
             shifter.set(true);
@@ -349,12 +402,19 @@ switchStateShift = false;
 
     public double deadzone(double d)
     {//deadzone for input devices
+        if (Math.abs(d) < .1) {
+            return 0;
+        }
+        return d / Math.abs(d) * ((Math.abs(d) - .1) / .9);
+    }
+    //comment
+     public double tinyDeadzone(double d)
+    {//deadzone for input devices
         if (Math.abs(d) < .05) {
             return 0;
         }
         return d / Math.abs(d) * ((Math.abs(d) - .05) / .95);
     }
-    //comment
 
     public void straight(double speed)
     {
@@ -404,108 +464,50 @@ switchStateShift = false;
         return false;
 
     }
-   /* public void updateLowerArm()
-{//state machine for the lower arm
-try{
-lowerArm.setX(deadzone(controller.getZ()));
-} catch (CANTimeoutException e){
-DriverStationLCD lcd = DriverStationLCD.getInstance();
-lcd.println(DriverStationLCD.Line.kMain6, 1, "Arm is failing");
-lcd.updateLCD();
-}
 
-}
-
-public void updateUpperArm()
-{
-if(controller.getRawButton(6))
-{
-System.out.println("Upper arm: .5");
-try{
-upperArm.setX(0.5);
-} catch (CANTimeoutException e){
-DriverStationLCD lcd = DriverStationLCD.getInstance();
-lcd.println(DriverStationLCD.Line.kMain6, 1, "Arm is failing");
-lcd.updateLCD();
-}
-}
-else if (controller.getRawButton(5))
-{
-System.out.println("Upper arm: -.5");
-try
-{
-upperArm.setX(-0.35);
-}
-catch (CANTimeoutException e)
-{
-DriverStationLCD lcd = DriverStationLCD.getInstance();
-lcd.println(DriverStationLCD.Line.kMain6, 1, "Arm is failing");
-lcd.updateLCD();
-}
-}
-else
-{
-try{
-upperArm.setX(0.0);
-} catch (CANTimeoutException e){
-DriverStationLCD lcd = DriverStationLCD.getInstance();
-lcd.println(DriverStationLCD.Line.kMain6, 1, "Arm is failing");
-lcd.updateLCD();
-}
-}
-//feedMe.feed();
-}
-*/
     public void updateLowerArm()
-    {//state machine for the lower arm
-            //lowerArm.set(deadzone(controller.getZ()));
-        if(j1.getRawButton(2))
-        {
-            lowerArm.set(0.5);
-        }
-        else if(j2.getRawButton(2))
-        {
-            lowerArm.set(-0.5);
-        }
+    {
+        if(tinyDeadzone(-controller.getY()) == 0)
+                break1.set(true);
+        Sholder.set(tinyDeadzone(-controller.getY()));
     }
 
     public void updateUpperArm()
     {
+       if(tinyDeadzone(-controller.getRawAxis(5)) == 0)
+                break2.set(true);
+        Elbow.set(-tinyDeadzone(controller.getRawAxis(5)));
 
-         if(j1.getRawButton(3))
-        {
-            upperArm.set(0.5);
-        }
-        else if(j2.getRawButton(3))
-        {
-            upperArm.set(-0.5);
-        }
-       /* if(controller.getRawButton(6))
-        {
-            System.out.println("Upper arm: .5");
-            upperArm.set(0.5);
-        }
-        else if (controller.getRawButton(5))
-        {
-            System.out.println("Upper arm: -.5");
-            upperArm.set(-0.35);
-        }
-        else
-        {
-            
-            upperArm.set(0.0);
-            
-        }*/
-       }
-    
-    public void moveWhileTracking(int lineState, double speed)
+    }
+    boolean run = true;
+
+    public void changeKraken()
     {
-      switch (lineState)
+        Kraken.set(!Kraken.get());
+    }
+
+
+    int waitFor = 0;
+    public void moveWhileTracking(int lineState, double speed, int autoState)
+    {
+
+        if(run)
         {
+        switch (lineState)
+        {
+
             case 0: //No sensors see the line
                 System.out.println("Lost the line: " + lastSense);
-                speed = .25;
-                 if (lastSense == 1) // left is last seen, go left
+                speed = .4;
+                if(waitFor == 1)
+                {
+                    hardLeft(speed);
+                }
+                else if(waitFor == 2)
+                {
+                    hardLeft(speed);
+                }
+                else if (lastSense == 1) // left is last seen, go left
                 {
                     setLefts(-speed);//speed * 0.7);
                     setRights(speed);
@@ -519,6 +521,7 @@ lcd.updateLCD();
                 {
                     setLefts(0.2); // CAUTION! Go Slowly!
                     setRights(0.2);
+                    System.out.println("Panic!");
                 }
                 break;
             case 1: //Right sees the line
@@ -542,10 +545,12 @@ lcd.updateLCD();
                 if(forkLeft)
                 {
                     hardLeft(speed);
+                    waitFor = 1;
                 }
                 else
                 {
                     hardRight(speed);
+                    waitFor = 2;
                 }
                 break;
             case 6: //Left and middle see the line
@@ -565,39 +570,167 @@ lcd.updateLCD();
                 break;
             default:
                 System.out.println("You're doomed. Run.");
+                break;
         }
+        }
+    }
+
+    public boolean breaking()
+    {
+        if(j1.getRawButton(3) || j2.getRawButton(3))
+        {
+           try{
+           setBreak(fLeft);
+           setBreak(bLeft);
+           setBreak(fRight);
+           setBreak(bRight);
+
+           }catch(CANTimeoutException e){
+DriverStationLCD lcd = DriverStationLCD.getInstance();
+lcd.println(DriverStationLCD.Line.kMain6, 1, "Breaking failed");
+lcd.updateLCD();
+            return false;
+        }
+        }
+        else if (j1.getRawButton(2) || j2.getRawButton(2))
+        {
+             try{
+           setBreak(fLeft);
+           setBreak(bLeft);
+           setBreak(fRight);
+           setBreak(bRight);
+
+           }catch(CANTimeoutException e){
+DriverStationLCD lcd = DriverStationLCD.getInstance();
+lcd.println(DriverStationLCD.Line.kMain6, 1, "Breaking failed");
+lcd.updateLCD();}
+
+             straight(0);
+             return true;
+        }
+        else {
+            try{
+           setCoast(fLeft);
+           setCoast(bLeft);
+           setCoast(fRight);
+           setCoast(bRight);
+
+           }catch(CANTimeoutException e){
+DriverStationLCD lcd = DriverStationLCD.getInstance();
+lcd.println(DriverStationLCD.Line.kMain6, 1, "Breaking failed");
+lcd.updateLCD();
+        }
+        }
+        return false;
+    }
+
+    public void hardBreak()
+    {
 
     }
 
-    public void raiseArm()
+    public void hangTube()
     {
-        try
-        {
-        upperArm.set(.3);
-        if (upperArmChannel.getAccumulatorValue() > 1014) //Placeholder
-        {
-            upperArm.set(0);
-            upperArmRaised = true;
-        }
-        if (upperArmRaised)
-        {
-            lowerArm.set(.3);
-            if (lowerArmChannel.getAccumulatorValue() > 1014)
-            {
-                lowerArm.set(0);
-                lowerArmRaised = true;
 
-                while (!closerThan(300)) {setRights(0.2); setLefts(0.2);} // drive slowly to 30cm from wall
-                hand.set(true);
-                
-            }
-        }
-        }
-        catch (Exception e)
-        {
-            lcd.println(DriverStationLCD.Line.kMain6, 1, e.toString());
+         Kraken.set(true);
+                        try
+                        {
+                            Thread.sleep(500); //And after two seconds...
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+                        straight(-.6);
 
-        }
+                        try
+                        {
+                            Thread.sleep(2000); //And after two seconds...
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+
+                        straight(0);
+
+                        hasHangedTube = true;
+
+
+    }
+
+    public void setArmHeight(int height)
+    {
+         boolean upperArmRaised = false;
+         boolean droppingArm = false;
+                //upperLimitS = new DigitalInput(10);
+                //lowerLimitS = new DigitalInput(11);
+                //upperLimitE = new DigitalInput(12);
+                //lowerLimitE = new DigitalInput(13);
+          switch(height){
+                default:
+                        break;
+                case 5:
+                    if (ShoulderencoderValue < ShoulderteleopValue) Sholder.set(0.2); // raise lower arm to set point
+                    else if (ShoulderencoderValue > ShoulderteleopValue)
+                    {
+                        Sholder.set(0);
+                    }
+                    //low middle
+                    //THERE NEEDS TO BE A LOOP HERE!!!
+                    break;
+                case 9:
+                    if (!upperLimitS.get()) {Sholder.set(0.3); upperArmRaised = true;}
+                    if (!upperLimitE.get() && upperArmRaised && !droppingArm) Elbow.set(0.3);
+                    if (upperLimitE.get())
+                    {
+                        droppingArm = true;
+                        Elbow.set(-0.2);
+                        for(int i = 0; i < 300000; i++); //stupid delay
+                        Elbow.set(0);
+                    }
+
+                    //low high
+                     //THERE NEEDS TO BE A LOOP HERE!!!
+                    break;
+                case 2:
+                    if (ShoulderencoderValue < ShoulderteleopValue) Sholder.set(0.2); // raise lower arm to set point
+                    else if (ShoulderencoderValue > ShoulderteleopValue)
+                    {
+                        Sholder.set(0);
+                    }
+                    //high low
+                     //THERE NEEDS TO BE A LOOP HERE!!!
+                    break;
+                case 4:
+                    if (ShoulderencoderValue < ShoulderteleopValue) Sholder.set(0.2); // raise lower arm to set point
+                    else if (ShoulderencoderValue > ShoulderteleopValue)
+                    {
+                        Sholder.set(0);
+                    }
+                    //high middle
+                     //THERE NEEDS TO BE A LOOP HERE!!!
+                    break;
+                case 8:
+                    if (!upperLimitS.get()) {Sholder.set(0.3); upperArmRaised = true;}
+                    if (!upperLimitE.get() && upperArmRaised && !droppingArm) Elbow.set(0.3);
+                    //high high
+                     //THERE NEEDS TO BE A LOOP HERE!!!
+                    break;
+
+                }
+    }
+
+    public int countToDistS()
+    {
+        return 0; //lowerArmEncoder.get();
+    }
+
+    private double countToDistE()
+    {
+        return 0;//upperArmEncoder.get();
     }
 
 }
+
+
