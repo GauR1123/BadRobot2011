@@ -52,10 +52,17 @@ public class RobotTemplate extends IterativeRobot
     DriverStation ds;
     Compressor air;
     Solenoid shifter;//shifts
+<<<<<<< HEAD
 
 
     Solenoid Kraken;
     DigitalOutput break1, minibot;
+=======
+    Encoder LowerArmEncoder;
+
+
+    Solenoid Kraken;
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
 
     boolean forkLeft = false;
     boolean pauseAtBegin = false; //Will the robot pause at the beginning of autonomous before moving?
@@ -70,8 +77,16 @@ public class RobotTemplate extends IterativeRobot
     boolean lowerArmRaised;
 
     DigitalInput upperLimitS, lowerLimitS, upperLimitE, lowerLimitE;
+<<<<<<< HEAD
 
     Encoder lowerArmEncoder = new Encoder(4,5);
+=======
+    DigitalOutput break1, minibot;
+
+
+    Encoder upperArmEncoder;
+    Encoder lowerArmEncoder;
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
 
     int autoState;
 
@@ -99,6 +114,11 @@ public class RobotTemplate extends IterativeRobot
                 //middle2 = new DigitalInput(7);
                 //right2 = new DigitalInput(5);
 
+<<<<<<< HEAD
+=======
+                lowerArmEncoder = new Encoder(10,11);//These arguments may be inversed
+
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
                 output = new DigitalOutput(2); // ultrasonic output
                 input = new DigitalInput(3); //ultrasonic input
                 ultraSonic = new Ultrasonic(output, input, Ultrasonic.Unit.kMillimeter); //initialize ultrasonic
@@ -112,6 +132,10 @@ public class RobotTemplate extends IterativeRobot
                 Kraken = new Solenoid(8,2);
                 Kraken.set(false);
                 break1 = new DigitalOutput(2);
+<<<<<<< HEAD
+=======
+
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
                 minibot = new DigitalOutput(3);
                 minibot.set(true);
                 ds = DriverStation.getInstance();
@@ -122,6 +146,14 @@ public class RobotTemplate extends IterativeRobot
                 updateDS();
 
 
+<<<<<<< HEAD
+=======
+                upperArmRaised = false;
+                lowerArmRaised = false;
+
+                lcd = DriverStationLCD.getInstance();
+
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
                 upperArmRaised = false;
                 lowerArmRaised = false;
 
@@ -133,7 +165,11 @@ public class RobotTemplate extends IterativeRobot
                 //lowerArmEncoder = new Encoder(1,2);
                 //upperArmEncoder.reset(); //"Zero out" the encoders
                // lowerArmEncoder.reset();
+<<<<<<< HEAD
             }
+=======
+            } 
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
             catch (Exception e)
             {
                 e.printStackTrace();
@@ -143,8 +179,8 @@ public class RobotTemplate extends IterativeRobot
     }
 
     /**
-* This function is called periodically during autonomous
-*/
+    * This function is called periodically during autonomous
+    */
 
     boolean atFork = false; // if robot has arrived at fork
     boolean armAtHeight = false;
@@ -178,11 +214,21 @@ public class RobotTemplate extends IterativeRobot
          boolean leftValue = left.get();
          boolean middleValue = middle.get();
          boolean rightValue = right.get();
+<<<<<<< HEAD
 
          int height = (int)(ds.getDigitalIn(5)?0:1)+ // lower set of pegs
                         (int)(ds.getDigitalIn(6)?0:2)+ // low peg
                         (int)(ds.getDigitalIn(7)?0:4)+ // mid
                         (int)(ds.getDigitalIn(8)?0:8); // high
+=======
+         //boolean leftValue2 = left2.get();
+         //boolean middleValue2 = middle2.get();
+         //boolean rightValue2 = right2.get();
+         int height = (int)(ds.getDigitalIn(5)?0:1)+
+                        (int)(ds.getDigitalIn(6)?0:2)+
+                        (int)(ds.getDigitalIn(7)?0:4)+
+                        (int)(ds.getDigitalIn(8)?0:8);
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
         double speed = 0.3;
        // System.out.println(rightValue + " " + middleValue + " " + leftValue);
         int lineState = (int)(rightValue?0:1)+
@@ -281,7 +327,11 @@ public class RobotTemplate extends IterativeRobot
             hasAlreadyPaused = true; //The robot has now paused
         }
 
+<<<<<<< HEAD
 
+=======
+       
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
 
     }
     boolean KrakenIsWaiting = false;
@@ -312,10 +362,17 @@ public class RobotTemplate extends IterativeRobot
         }
         updateLowerArm();
         updateUpperArm();
+<<<<<<< HEAD
 
         if(j2.getRawButton(10) && controller.getRawButton(2) && controller.getRawButton(8))
             minibot.set(false);
 
+=======
+
+        if(j2.getRawButton(10) && controller.getRawButton(2) && controller.getRawButton(8))
+            minibot.set(false);
+        
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
         if(!breaking())
         {
          setLefts(deadzone(-j1.getY()));
@@ -349,7 +406,11 @@ public class RobotTemplate extends IterativeRobot
         ds.setDigitalOut(2, pauseAtBegin);
         ds.setDigitalOut(3, stopAfterHang);
         ds.setDigitalOut(4, turnAfterHang);
+<<<<<<< HEAD
         ds.setDigitalOut(5, shifter.get());
+=======
+        ds.setDigitalOut(5,  shifter.get());
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
     }
 
     private void setRights(double d)
@@ -381,7 +442,11 @@ public class RobotTemplate extends IterativeRobot
     boolean switchStateShift = false;
     public void updateGear()
     {
+<<<<<<< HEAD
 
+=======
+       
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
         if(j1.getTrigger())
         {
             shifter.set(true);
@@ -462,7 +527,11 @@ public class RobotTemplate extends IterativeRobot
         return false;
 
     }
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
     public void updateLowerArm()
     {
         if(tinyDeadzone(-controller.getY()) == 0)
@@ -472,10 +541,16 @@ public class RobotTemplate extends IterativeRobot
 
         public void updateUpperArm()
     {
+<<<<<<< HEAD
         if(tinyDeadzone(-controller.getY()) == 0)
         Sholder.set(tinyDeadzone(-controller.getY()));
     }
 
+=======
+        Elbow.set(-tinyDeadzone(controller.getRawAxis(5)));
+
+    }
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
     boolean run = true;
 
     public void changeKraken()
@@ -575,13 +650,17 @@ public class RobotTemplate extends IterativeRobot
     public boolean breaking()
     {
         if(j1.getRawButton(3) || j2.getRawButton(3))
+<<<<<<< HEAD
+        {
+           try{
+=======
         {
            try{
            setBreak(fLeft);
            setBreak(bLeft);
            setBreak(fRight);
            setBreak(bRight);
-
+           
            }catch(CANTimeoutException e){
 DriverStationLCD lcd = DriverStationLCD.getInstance();
 lcd.println(DriverStationLCD.Line.kMain6, 1, "Breaking failed");
@@ -589,6 +668,45 @@ lcd.updateLCD();
             return false;
         }
         }
+        else if (j1.getRawButton(2) || j2.getRawButton(2))
+        {
+             try{
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
+           setBreak(fLeft);
+           setBreak(bLeft);
+           setBreak(fRight);
+           setBreak(bRight);
+<<<<<<< HEAD
+
+           }catch(CANTimeoutException e){
+DriverStationLCD lcd = DriverStationLCD.getInstance();
+lcd.println(DriverStationLCD.Line.kMain6, 1, "Breaking failed");
+lcd.updateLCD();
+            return false;
+=======
+          
+           }catch(CANTimeoutException e){
+DriverStationLCD lcd = DriverStationLCD.getInstance();
+lcd.println(DriverStationLCD.Line.kMain6, 1, "Breaking failed");
+lcd.updateLCD();}
+
+             straight(0);
+             return true;
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
+        }
+        else {
+            try{
+           setCoast(fLeft);
+           setCoast(bLeft);
+           setCoast(fRight);
+           setCoast(bRight);
+
+           }catch(CANTimeoutException e){
+DriverStationLCD lcd = DriverStationLCD.getInstance();
+lcd.println(DriverStationLCD.Line.kMain6, 1, "Breaking failed");
+lcd.updateLCD();
+        }
+<<<<<<< HEAD
         else if (j1.getRawButton(2) || j2.getRawButton(2))
         {
              try{
@@ -665,10 +783,57 @@ lcd.updateLCD();
                 //upperLimitE = new DigitalInput(12);
                 //lowerLimitE = new DigitalInput(13);
          int ShoulderteleopValue = 9001;
+=======
+        }
+        return false;
+    }
+
+    public void hardBreak()
+    {
+
+    }
+
+    public void hangTube()
+    {
+
+         Kraken.set(true);
+                        try
+                        {
+                            Thread.sleep(500); //And after two seconds...
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+                        straight(-.6);
+
+                        try
+                        {
+                            Thread.sleep(2000); //And after two seconds...
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+
+                        straight(0);
+
+                        hasHangedTube = true;
+
+     
+    }
+
+    public void setArmHeight(int height)
+    {
+        boolean lowerArmRaised = false;
+        boolean upperArmRaised = false;
+        int DoNotUse = 0;
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
           switch(height){
                 default:
                         break;
                 case 5:
+<<<<<<< HEAD
                     while (lowerArmEncoder.get() < ShoulderteleopValue) Sholder.set(0.2); // raise lower arm to set point
                     if (lowerArmEncoder.get() > ShoulderteleopValue)
                     {
@@ -717,6 +882,81 @@ lcd.updateLCD();
                      //THERE NEEDS TO BE A LOOP HERE!!!
                     break;
 
+=======
+                    break1.set(false);
+                    while(LowerArmEncoder.get() < DoNotUse)//low Middle
+                    {
+                        Sholder.set(.8);
+                    }
+                    break1.set(true);
+                    while(!upperArmRaised)
+                    {
+                        //timer here if needed
+                        upperArmRaised = true;
+
+                    }
+                    break;
+                case 9:
+                    //low high
+                    break1.set(false);
+                    while(LowerArmEncoder.get() < DoNotUse)
+                    {
+                        Sholder.set(.8);
+                    }
+                    break1.set(true);
+                    while(!upperArmRaised)
+                    {
+                        //timer here if needed
+                        upperArmRaised = true;
+
+                    }
+                    break;
+                case 2:
+                    //high low
+                    break1.set(false);
+                    while(LowerArmEncoder.get() < DoNotUse)
+                    {
+                        Sholder.set(.8);
+                    }
+                    break1.set(true);
+                    while(!upperArmRaised)
+                    {
+                        //timer here if needed
+                        upperArmRaised = true;
+
+                    }
+                    break;
+                case 4:
+                    //high middle
+                    break1.set(false);
+                    while(LowerArmEncoder.get() < DoNotUse)
+                    {
+                        Sholder.set(.8);
+                    }
+                    break1.set(true);
+                    while(!upperArmRaised)
+                    {
+                        //timer here if needed
+                        upperArmRaised = true;
+
+                    }
+                    break;
+                case 8:
+                    //high high
+                    break1.set(false);
+                    while(LowerArmEncoder.get() < DoNotUse)
+                    {
+                        Sholder.set(.8);
+                    }
+                    break1.set(true);
+                    while(!upperArmRaised)
+                    {
+                        //timer here if needed
+                        upperArmRaised = true;
+
+                    }
+                    break;
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
                 }
     }
 
@@ -732,4 +972,7 @@ lcd.updateLCD();
 
 }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> ee7f1eb194fc0e9a06380afdbc01d9dba8f3900d
